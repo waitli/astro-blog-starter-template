@@ -1,0 +1,66 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import ContentPage from "../../layouts/ContentPage.astro";
+
+export async function getStaticPaths() {
+	const vendors = await getCollection("vendors");
+	return vendors.map((vendor) => ({
+		params: { slug: vendor.id },
+		props: vendor,
+	}));
+}
+
+type Props = CollectionEntry<"vendors">;
+
+const vendor = Astro.props;
+const allDeals = await getCollection("deals");
+const relatedDeals = allDeals.filter((deal) => deal.data.vendor === vendor.id);
+const { Content } = await render(vendor);
+const meta = [
+	`评分 ${vendor.data.rating.toFixed(1)}`,
+	`${vendor.data.established} 年成立`,
+	vendor.data.support,
+];
+---
+
+<ContentPage
+	title={vendor.data.name}
+	description={vendor.data.description}
+	image={vendor.data.heroImage}
+	label="商家详情"
+	meta={meta}
+>
+	<div class="split" style="margin-bottom: 24px;">
+		<div class="detail-card">
+			<div class="detail-grid">
+				<div class="detail-item">
+					<span>总部</span>
+					<strong>{vendor.data.headquarters}</strong>
+				</div>
+				<div class="detail-item">
+					<span>支付方式</span>
+					<strong>{vendor.data.paymentMethods.join(" / ")}</strong>
+				</div>
+				<div class="detail-item">
+					<span>主营</span>
+					<strong>{vendor.data.categories.join(" / ")}</strong>
+				</div>
+				<div class="detail-item">
+					<span>官网</span>
+					<strong><a href={vendor.data.website} target="_blank" rel="noreferrer">{vendor.data.website}</a></strong>
+				</div>
+			</div>
+		</div>
+		<aside class="detail-card">
+			<h3>当前活动</h3>
+			<ul class="bullet-list">
+				{
+					relatedDeals.map((deal) => (
+						<li><a href={`/deals/${deal.id}/`}>{deal.data.title}</a></li>
+					))
+				}
+			</ul>
+		</aside>
+	</div>
+	<Content />
+</ContentPage>

@@ -1,0 +1,88 @@
+---
+import { getCollection, render, type CollectionEntry } from "astro:content";
+import ContentPage from "../../layouts/ContentPage.astro";
+import { billingCycleLabel, renewalLabel } from "../../lib/content";
+
+export async function getStaticPaths() {
+	const deals = await getCollection("deals");
+	return deals.map((deal) => ({
+		params: { slug: deal.id },
+		props: deal,
+	}));
+}
+
+type Props = CollectionEntry<"deals">;
+
+const deal = Astro.props;
+const { Content } = await render(deal);
+const meta = [
+	`${deal.data.vendor} / ${deal.data.region.join(" / ")}`,
+	`$${deal.data.price}${billingCycleLabel(deal.data.billingCycle)}`,
+	renewalLabel(deal.data.renewalType),
+];
+---
+
+<ContentPage
+	title={deal.data.title}
+	description={deal.data.description}
+	image={deal.data.heroImage}
+	label="优惠详情"
+	publishedAt={deal.data.publishedAt}
+	updatedAt={deal.data.updatedAt}
+	meta={meta}
+>
+	<div class="split" style="margin-bottom: 24px;">
+		<div class="detail-card">
+			<div class="detail-grid">
+				<div class="detail-item">
+					<span>配置</span>
+					<strong>{deal.data.product}</strong>
+				</div>
+				<div class="detail-item">
+					<span>原价</span>
+					<strong>{deal.data.originalPrice ? `$${deal.data.originalPrice}` : "未标注"}</strong>
+				</div>
+				<div class="detail-item">
+					<span>优惠码</span>
+					<strong>{deal.data.discountCode ?? "无需优惠码"}</strong>
+				</div>
+				<div class="detail-item">
+					<span>截止时间</span>
+					<strong>{deal.data.expiresAt?.toLocaleDateString("zh-CN") ?? "未标注"}</strong>
+				</div>
+				<div class="detail-item">
+					<span>来源</span>
+					<strong><a href={deal.data.sourceUrl} target="_blank" rel="noreferrer">{deal.data.sourceName}</a></strong>
+				</div>
+				<div class="detail-item">
+					<span>核验时间</span>
+					<strong>{deal.data.sourceCheckedAt.toLocaleDateString("zh-CN")}</strong>
+				</div>
+			</div>
+		</div>
+		<aside class="detail-card">
+			<h3>下单入口</h3>
+			<p>{deal.data.highlights.join(" / ")}</p>
+			<p><a class="button" href={deal.data.productUrl} target="_blank" rel="noreferrer">前往商家页面</a></p>
+		</aside>
+	</div>
+	<div class="tag-list" style="margin-bottom: 24px;">
+		{deal.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+		{deal.data.stack.map((item) => <span class="tag">{item}</span>)}
+	</div>
+	<div class="compare-grid" style="margin-bottom: 24px;">
+		<div class="compare-box compare-good">
+			<span>适合谁</span>
+			<ul class="mini-points">
+				{deal.data.bestFor.map((item) => <li>{item}</li>)}
+			</ul>
+		</div>
+		<div class="compare-box compare-warn">
+			<span>不适合谁</span>
+			<ul class="mini-points">
+				{deal.data.avoidIf.map((item) => <li>{item}</li>)}
+			</ul>
+		</div>
+	</div>
+	<Content />
+</ContentPage>

@@ -12,7 +12,10 @@ const guides = sortGuidesByDate(await getCollection("guides"));
 <!doctype html>
 <html lang={SITE_LOCALE}>
 	<head>
-		<BaseHead title={`教程与攻略 | ${SITE_TITLE}`} description="选购建议、避坑信息和基础入门内容。" />
+		<BaseHead
+			title={`教程与攻略 | ${SITE_TITLE}`}
+			description="给新手的 VPS 选购、优惠识别和避坑内容。"
+		/>
 	</head>
 	<body>
 		<Header />
@@ -22,7 +25,7 @@ const guides = sortGuidesByDate(await getCollection("guides"));
 					<div>
 						<span class="eyebrow">Guides</span>
 						<h1>教程与攻略</h1>
-						<p class="muted">这里集中整理选购建议、基础概念和避坑内容。</p>
+						<p class="muted">教程页负责承接搜索流量，也能给优惠页补充信任感。</p>
 					</div>
 				</div>
 				<div class="grid grid-2">
@@ -30,8 +33,14 @@ const guides = sortGuidesByDate(await getCollection("guides"));
 						guides.map((guide) => (
 							<article class="card">
 								<img src={guide.data.heroImage} alt={guide.data.title} />
-								<h2><a href={`/blog/${guide.id}/`}>{guide.data.title}</a></h2>
+								<h2>
+									<a href={`/guides/${guide.id}/`}>{guide.data.title}</a>
+								</h2>
 								<p>{guide.data.description}</p>
+								<div class="badge-row">
+									<span class="tag">{guide.data.category}</span>
+									{guide.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+								</div>
 							</article>
 						))
 					}

@@ -1,0 +1,53 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import { SITE_LOCALE, SITE_TITLE } from "../../consts";
+import { getCollection } from "astro:content";
+import { vendorDealCount } from "../../lib/content";
+
+const vendors = await getCollection("vendors");
+const deals = await getCollection("deals");
+---
+
+<!doctype html>
+<html lang={SITE_LOCALE}>
+	<head>
+		<BaseHead
+			title={`商家索引 | ${SITE_TITLE}`}
+			description="按商家浏览当前活动、基础印象和适合人群。"
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="section">
+			<div class="shell">
+				<div class="section-header">
+					<div>
+						<span class="eyebrow">Vendors</span>
+						<h1>商家索引</h1>
+						<p class="muted">用来集中沉淀商家印象、支付方式和当前活动数量。</p>
+					</div>
+				</div>
+				<div class="grid grid-3">
+					{
+						vendors.map((vendor) => (
+							<article class="card">
+								<img src={vendor.data.heroImage} alt={vendor.data.name} />
+								<h2>
+									<a href={`/vendors/${vendor.id}/`}>{vendor.data.name}</a>
+								</h2>
+								<p>{vendor.data.description}</p>
+								<div class="badge-row">
+									<span class="tag">评分 {vendor.data.rating.toFixed(1)}</span>
+									<span class="tag">{vendorDealCount(vendor.id, deals)} 条活动</span>
+								</div>
+							</article>
+						))
+					}
+				</div>
+			</div>
+		</main>
+		<Footer />
+	</body>
+</html>

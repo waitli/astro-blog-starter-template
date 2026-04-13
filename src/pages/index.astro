@@ -1,49 +1,282 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Header from '../components/Header.astro';
-import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import { SITE_DESCRIPTION, SITE_LOCALE, SITE_TITLE } from "../consts";
+import { getCollection } from "astro:content";
+import {
+	billingCycleLabel,
+	collectDealTags,
+	expiringDeals,
+	featuredDeals,
+	featuredGuides,
+	featuredVendors,
+	latestDeals,
+	renewalLabel,
+	vendorDealCount,
+} from "../lib/content";
+
+const deals = await getCollection("deals");
+const vendors = await getCollection("vendors");
+const guides = await getCollection("guides");
+
+const homepageFeaturedDeals = featuredDeals(deals, 3);
+const homepageLatestDeals = latestDeals(deals, 6);
+const homepageExpiringDeals = expiringDeals(deals, 3);
+const homepageVendors = featuredVendors(vendors, 3);
+const homepageGuides = featuredGuides(guides, 2);
+const homepageTags = collectDealTags(deals);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={SITE_LOCALE}>
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} image="/blog-placeholder-4.jpg" />
 	</head>
 	<body>
 		<Header />
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<section class="hero">
+				<div class="shell hero-grid">
+					<div class="hero-copy">
+						<span class="eyebrow">主机优惠聚合</span>
+						<h1>VPS、云主机和独服优惠，按价格、地区和商家快速查看</h1>
+						<p>
+							收录正在进行的主机优惠、商家信息和选购教程，优先展示适合建站、轻量业务和新手入门的活动。
+						</p>
+						<div class="hero-actions">
+							<a class="button" href="/deals">查看最新优惠</a>
+							<a class="button-secondary" href="/guides">查看选购教程</a>
+						</div>
+						<div class="quick-links">
+							<a href="/deals?region=%E7%BE%8E%E5%9B%BD&sort=latest">美国低价</a>
+							<a href="/deals?region=%E6%97%A5%E6%9C%AC&sort=latest">日本线路</a>
+							<a href="/deals?billing=yearly&sort=latest">年付套餐</a>
+							<a href="/guides">新手入门</a>
+						</div>
+						<div class="hero-metrics">
+							<div class="stat-card">
+								<strong>{deals.length}</strong>
+								<span>已录入优惠</span>
+							</div>
+							<div class="stat-card">
+								<strong>{vendors.length}</strong>
+								<span>重点商家</span>
+							</div>
+							<div class="stat-card">
+								<strong>{guides.length}</strong>
+								<span>教程与避坑</span>
+							</div>
+						</div>
+					</div>
+					<aside class="highlight-panel">
+						<div class="section-header">
+							<div>
+								<span class="eyebrow">今日重点</span>
+								<h2>先看这些，再决定是否下单</h2>
+							</div>
+						</div>
+						<ul class="hero-list">
+							<li>精选优惠：适合直接筛第一轮活动</li>
+							<li>即将结束：优先看限时和补货信息</li>
+							<li>商家页：查看支付方式、主营方向和活动汇总</li>
+							<li>教程区：判断线路、续费和适用场景</li>
+						</ul>
+					</aside>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="shell">
+					<div class="section-header">
+						<div>
+							<span class="eyebrow">热门标签</span>
+							<h2>先按需求缩小范围</h2>
+						</div>
+					</div>
+					<div class="tag-cloud">
+						{
+							homepageTags.map(([tag, count]) => (
+								<a class="tag-pill" href={`/deals?tag=${encodeURIComponent(tag)}&sort=latest`}>
+									<span>{tag}</span>
+									<strong>{count}</strong>
+								</a>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="shell">
+						<div class="section-header">
+							<div>
+								<span class="eyebrow">精选优惠</span>
+								<h2>当前值得优先看的活动</h2>
+							</div>
+							<a href="/deals">全部优惠</a>
+						</div>
+					<div class="grid grid-3">
+						{
+							homepageFeaturedDeals.map((deal) => (
+								<article class="card">
+									<img src={deal.data.heroImage} alt={deal.data.title} />
+									<div class="price-row">
+										<span class="price">
+											${deal.data.price}
+											{billingCycleLabel(deal.data.billingCycle)}
+										</span>
+										{deal.data.originalPrice && (
+											<span class="price-old">${deal.data.originalPrice}</span>
+										)}
+									</div>
+									<h3>
+										<a href={`/deals/${deal.id}/`}>{deal.data.title}</a>
+									</h3>
+									<p>{deal.data.description}</p>
+									<div class="badge-row">
+										<span class="tag">{deal.data.region.join(" / ")}</span>
+										<span class="tag">{renewalLabel(deal.data.renewalType)}</span>
+									</div>
+									<ul class="mini-points">
+										{deal.data.bestFor.slice(0, 2).map((item) => <li>{item}</li>)}
+									</ul>
+								</article>
+							))
+						}
+					</div>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="shell split">
+					<div>
+						<div class="section-header">
+							<div>
+								<span class="eyebrow">最新优惠</span>
+								<h2>最近更新</h2>
+							</div>
+						</div>
+						<div class="grid">
+							{
+								homepageLatestDeals.map((deal) => (
+									<article class="detail-card">
+										<div class="price-row">
+											<span class="price">
+												${deal.data.price}
+												{billingCycleLabel(deal.data.billingCycle)}
+											</span>
+											<span class="tag">{deal.data.vendor}</span>
+											<span class="tag">{deal.data.region.join(" / ")}</span>
+										</div>
+										<h3>
+											<a href={`/deals/${deal.id}/`}>{deal.data.title}</a>
+										</h3>
+										<p>{deal.data.product}</p>
+										<div class="inline-meta">适合：{deal.data.bestFor[0]}</div>
+									</article>
+								))
+							}
+						</div>
+					</div>
+					<div class="grid">
+						<div class="detail-card">
+								<div class="section-header">
+									<div>
+										<span class="eyebrow">即将结束</span>
+										<h3>这些活动更适合先看</h3>
+									</div>
+								</div>
+							<ul class="bullet-list">
+								{
+									homepageExpiringDeals.map((deal) => (
+										<li>
+											<a href={`/deals/${deal.id}/`}>{deal.data.title}</a>
+											<div class="muted">
+												截止 {deal.data.expiresAt?.toLocaleDateString("zh-CN")}
+											</div>
+										</li>
+									))
+								}
+							</ul>
+						</div>
+						<div class="detail-card">
+								<div class="section-header">
+									<div>
+										<span class="eyebrow">教程入口</span>
+										<h3>先搞清楚自己需要什么</h3>
+									</div>
+								</div>
+							<ul class="bullet-list">
+								{
+									homepageGuides.map((guide) => (
+										<li>
+											<a href={`/guides/${guide.id}/`}>{guide.data.title}</a>
+											<div class="muted">{guide.data.category}</div>
+										</li>
+									))
+								}
+							</ul>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<section class="section">
+				<div class="shell">
+						<div class="section-header">
+							<div>
+								<span class="eyebrow">热门商家</span>
+								<h2>常见服务商</h2>
+							</div>
+							<a href="/vendors">全部商家</a>
+						</div>
+					<div class="grid grid-3">
+						{
+							homepageVendors.map((vendor) => (
+								<article class="card">
+									<img src={vendor.data.heroImage} alt={vendor.data.name} />
+									<h3>
+										<a href={`/vendors/${vendor.id}/`}>{vendor.data.name}</a>
+									</h3>
+									<p>{vendor.data.description}</p>
+									<div class="badge-row">
+										<span class="tag">评分 {vendor.data.rating.toFixed(1)}</span>
+										<span class="tag">
+											{vendorDealCount(vendor.id, deals)} 条活动
+										</span>
+									</div>
+								</article>
+							))
+						}
+						</div>
+					</div>
+				</section>
+
+			<section class="section">
+				<div class="shell">
+					<div class="section-header">
+						<div>
+							<span class="eyebrow">选购建议</span>
+							<h2>不同需求，先看不同类型</h2>
+						</div>
+					</div>
+					<div class="grid grid-3">
+						<article class="detail-card tone-budget">
+							<h3>预算优先</h3>
+							<p>先看年付低价 VPS，重点关注续费价格、节点库存和售后响应。</p>
+						</article>
+						<article class="detail-card tone-site">
+							<h3>建站优先</h3>
+							<p>优先看托管云主机、备份能力和控制面板体验，不只看首单价格。</p>
+						</article>
+						<article class="detail-card tone-route">
+							<h3>线路优先</h3>
+							<p>先锁定香港、日本、新加坡或美国西海岸，再比较配置和价格。</p>
+						</article>
+					</div>
+				</div>
+			</section>
 		</main>
 		<Footer />
 	</body>

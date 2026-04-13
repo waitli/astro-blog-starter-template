@@ -1,0 +1,64 @@
+---
+import type { CollectionEntry } from "astro:content";
+import BaseHead from "../components/BaseHead.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import FormattedDate from "../components/FormattedDate.astro";
+import { SITE_LOCALE, SITE_TITLE } from "../consts";
+
+interface Props {
+	title: string;
+	description: string;
+	image?: string;
+	label: string;
+	publishedAt?: Date;
+	updatedAt?: Date;
+	meta?: string[];
+}
+
+const { title, description, image, label, publishedAt, updatedAt, meta = [] } = Astro.props;
+---
+
+<!doctype html>
+<html lang={SITE_LOCALE}>
+	<head>
+		<BaseHead title={`${title} | ${SITE_TITLE}`} description={description} image={image} />
+	</head>
+	<body>
+		<Header />
+		<main class="content-shell">
+			<article class="content-article">
+				<div class="eyebrow-row">
+					<span class="eyebrow">{label}</span>
+					{
+						publishedAt && (
+							<span class="muted">
+								发布时间 <FormattedDate date={publishedAt} />
+							</span>
+						)
+					}
+					{
+						updatedAt && (
+							<span class="muted">
+								更新于 <FormattedDate date={updatedAt} />
+							</span>
+						)
+					}
+				</div>
+				<h1>{title}</h1>
+				<p class="lead">{description}</p>
+				{
+					meta.length > 0 && (
+						<ul class="meta-list">
+							{meta.map((item) => <li>{item}</li>)}
+						</ul>
+					)
+				}
+				<div class="content-body">
+					<slot />
+				</div>
+			</article>
+		</main>
+		<Footer />
+	</body>
+</html>

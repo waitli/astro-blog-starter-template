@@ -9,10 +9,12 @@ export async function getStaticPaths() {
 		props: guide,
 	}));
 }
+
 type Props = CollectionEntry<"guides">;
 
 const guide = Astro.props;
 const { Content } = await render(guide);
+const meta = [guide.data.category, ...guide.data.tags];
 ---
 
 <ContentPage
@@ -22,7 +24,7 @@ const { Content } = await render(guide);
 	label="教程"
 	publishedAt={guide.data.publishedAt}
 	updatedAt={guide.data.updatedAt}
-	meta={[guide.data.category, ...guide.data.tags]}
+	meta={meta}
 >
 	<Content />
 </ContentPage>

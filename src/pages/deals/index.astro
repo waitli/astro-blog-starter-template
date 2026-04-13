@@ -1,0 +1,272 @@
+---
+import BaseHead from "../../components/BaseHead.astro";
+import Footer from "../../components/Footer.astro";
+import Header from "../../components/Header.astro";
+import { SITE_LOCALE, SITE_TITLE } from "../../consts";
+import { getCollection } from "astro:content";
+import { billingCycleLabel, isExpired, renewalLabel, sortDealsByDate } from "../../lib/content";
+
+const deals = sortDealsByDate(await getCollection("deals"));
+const regions = [...new Set(deals.flatMap((deal) => deal.data.region))].sort((a, b) => a.localeCompare(b));
+const tags = [...new Set(deals.flatMap((deal) => deal.data.tags))].sort((a, b) => a.localeCompare(b));
+const vendors = [...new Set(deals.map((deal) => deal.data.vendor))].sort((a, b) => a.localeCompare(b));
+---
+
+<!doctype html>
+<html lang={SITE_LOCALE}>
+	<head>
+		<BaseHead
+			title={`优惠列表 | ${SITE_TITLE}`}
+			description="按发布时间浏览 VPS、独立服务器、云主机和域名优惠。"
+		/>
+	</head>
+	<body>
+		<Header />
+		<main class="section">
+			<div class="shell">
+				<div class="section-header">
+					<div>
+						<span class="eyebrow">Deals</span>
+						<h1>优惠列表</h1>
+						<p class="muted">按发布时间整理当前活动，方便直接筛选价格、地区和续费方式。</p>
+					</div>
+					<div class="filter-summary">
+						<strong id="result-count">{deals.length}</strong>
+						<span>条活动</span>
+					</div>
+				</div>
+				<section class="filters-panel">
+					<div class="filters-grid">
+						<label class="filter-field filter-search">
+							<span>关键词</span>
+							<input id="search-filter" type="search" placeholder="搜索商家、标题、配置" />
+						</label>
+						<label class="filter-field">
+							<span>商家</span>
+							<select id="vendor-filter">
+								<option value="">全部商家</option>
+								{vendors.map((vendor) => <option value={vendor}>{vendor}</option>)}
+							</select>
+						</label>
+						<label class="filter-field">
+							<span>地区</span>
+							<select id="region-filter">
+								<option value="">全部地区</option>
+								{regions.map((region) => <option value={region}>{region}</option>)}
+							</select>
+						</label>
+						<label class="filter-field">
+							<span>标签</span>
+							<select id="tag-filter">
+								<option value="">全部标签</option>
+								{tags.map((tag) => <option value={tag}>{tag}</option>)}
+							</select>
+						</label>
+						<label class="filter-field">
+							<span>计费周期</span>
+							<select id="billing-filter">
+								<option value="">全部周期</option>
+								<option value="monthly">月付</option>
+								<option value="quarterly">季付</option>
+								<option value="semi-annual">半年付</option>
+								<option value="yearly">年付</option>
+								<option value="one-time">一次性</option>
+							</select>
+						</label>
+						<label class="filter-field">
+							<span>状态</span>
+							<select id="status-filter">
+								<option value="">全部状态</option>
+								<option value="active">进行中</option>
+								<option value="expired">已过期</option>
+							</select>
+						</label>
+						<label class="filter-field">
+							<span>排序</span>
+							<select id="sort-filter">
+								<option value="latest">最新发布</option>
+								<option value="price-asc">价格从低到高</option>
+								<option value="price-desc">价格从高到低</option>
+								<option value="expires">即将结束</option>
+							</select>
+						</label>
+						<div class="filter-actions">
+							<a class="button-secondary" href="/deals">清除筛选</a>
+						</div>
+					</div>
+					<div class="tag-cloud" style="margin-top: 16px;">
+						<a class="tag-pill" href="/deals?sort=latest"><span>最新发布</span></a>
+						<a class="tag-pill" href="/deals?billing=yearly&sort=price-asc"><span>年付低价</span></a>
+						<a class="tag-pill" href="/deals?region=%E6%97%A5%E6%9C%AC&sort=latest"><span>日本线路</span></a>
+						<a class="tag-pill" href="/deals?tag=%E5%BB%BA%E7%AB%99&sort=latest"><span>建站主机</span></a>
+					</div>
+					<div id="active-filters" class="active-filters"></div>
+				</section>
+				<div class="grid" id="latest">
+					{
+						deals.map((deal) => (
+							<article
+								class="detail-card deal-card"
+								data-region={deal.data.region.join("|")}
+								data-tags={deal.data.tags.join("|")}
+								data-billing={deal.data.billingCycle}
+								data-status={isExpired(deal) ? "expired" : "active"}
+								data-price={deal.data.price}
+								data-expires={deal.data.expiresAt?.valueOf() ?? Number.MAX_SAFE_INTEGER}
+								data-published={deal.data.publishedAt.valueOf()}
+								data-vendor={deal.data.vendor}
+								data-search={`${deal.data.title} ${deal.data.description} ${deal.data.product} ${deal.data.vendor} ${deal.data.region.join(" ")} ${deal.data.tags.join(" ")}`.toLowerCase()}
+							>
+								<div class="section-header">
+									<div>
+										<h2>
+											<a href={`/deals/${deal.id}/`}>{deal.data.title}</a>
+										</h2>
+										<p>{deal.data.description}</p>
+									</div>
+									<div class={isExpired(deal) ? "status-bad" : "status-good"}>
+										{isExpired(deal) ? "已过期" : "进行中"}
+									</div>
+								</div>
+								<div class="detail-grid">
+									<div class="detail-item">
+										<span>价格</span>
+										<strong>
+											${deal.data.price}
+											{billingCycleLabel(deal.data.billingCycle)}
+										</strong>
+									</div>
+									<div class="detail-item">
+										<span>商家</span>
+										<strong>{deal.data.vendor}</strong>
+									</div>
+									<div class="detail-item">
+										<span>区域</span>
+										<strong>{deal.data.region.join(" / ")}</strong>
+									</div>
+									<div class="detail-item">
+										<span>续费</span>
+										<strong>{renewalLabel(deal.data.renewalType)}</strong>
+									</div>
+								</div>
+								<div class="tag-list" style="margin-top: 14px;">
+									{deal.data.tags.map((tag) => <span class="tag">{tag}</span>)}
+								</div>
+								<div class="compare-grid">
+									<div class="compare-box compare-good">
+										<span>适合谁</span>
+										<ul class="mini-points">
+											{deal.data.bestFor.map((item) => <li>{item}</li>)}
+										</ul>
+									</div>
+									<div class="compare-box compare-warn">
+										<span>不适合谁</span>
+										<ul class="mini-points">
+											{deal.data.avoidIf.map((item) => <li>{item}</li>)}
+										</ul>
+									</div>
+								</div>
+							</article>
+						))
+					}
+				</div>
+				<div id="empty-state" class="empty-state" hidden>
+					<h2>没有匹配结果</h2>
+					<p>试试清除筛选，或者换一个地区、标签和关键词。</p>
+				</div>
+			</div>
+		</main>
+		<script>
+			const cards = Array.from(document.querySelectorAll(".deal-card"));
+			const controls = {
+				search: document.querySelector("#search-filter"),
+				vendor: document.querySelector("#vendor-filter"),
+				region: document.querySelector("#region-filter"),
+				tag: document.querySelector("#tag-filter"),
+				billing: document.querySelector("#billing-filter"),
+				status: document.querySelector("#status-filter"),
+				sort: document.querySelector("#sort-filter"),
+			};
+			const countEl = document.querySelector("#result-count");
+			const list = document.querySelector("#latest");
+			const activeFiltersEl = document.querySelector("#active-filters");
+			const emptyStateEl = document.querySelector("#empty-state");
+			const params = new URLSearchParams(window.location.search);
+
+			for (const [key, control] of Object.entries(controls)) {
+				if (control && params.get(key)) control.value = params.get(key);
+				control?.addEventListener("change", applyFilters);
+			}
+
+			function matchValue(dataValue, selected) {
+				if (!selected) return true;
+				return dataValue.split("|").includes(selected);
+			}
+
+			function applyFilters() {
+				const search = controls.search?.value.trim().toLowerCase() ?? "";
+				const vendor = controls.vendor?.value ?? "";
+				const region = controls.region?.value ?? "";
+				const tag = controls.tag?.value ?? "";
+				const billing = controls.billing?.value ?? "";
+				const status = controls.status?.value ?? "";
+				const sort = controls.sort?.value ?? "latest";
+				const nextParams = new URLSearchParams();
+				if (search) nextParams.set("search", search);
+				if (vendor) nextParams.set("vendor", vendor);
+				if (region) nextParams.set("region", region);
+				if (tag) nextParams.set("tag", tag);
+				if (billing) nextParams.set("billing", billing);
+				if (status) nextParams.set("status", status);
+				if (sort && sort !== "latest") nextParams.set("sort", sort);
+				const nextUrl = `${window.location.pathname}${nextParams.toString() ? `?${nextParams}` : ""}`;
+				window.history.replaceState({}, "", nextUrl);
+
+				const visible = cards.filter((card) => {
+					return (
+						(!search || (card.dataset.search || "").includes(search)) &&
+						(!vendor || card.dataset.vendor === vendor) &&
+						matchValue(card.dataset.region || "", region) &&
+						matchValue(card.dataset.tags || "", tag) &&
+						(!billing || card.dataset.billing === billing) &&
+						(!status || card.dataset.status === status)
+					);
+				});
+
+				cards
+					.slice()
+					.sort((a, b) => {
+						if (sort === "price-asc") return Number(a.dataset.price) - Number(b.dataset.price);
+						if (sort === "price-desc") return Number(b.dataset.price) - Number(a.dataset.price);
+						if (sort === "expires") return Number(a.dataset.expires) - Number(b.dataset.expires);
+						return Number(b.dataset.published) - Number(a.dataset.published);
+					})
+					.forEach((card) => list?.append(card));
+
+				cards.forEach((card) => {
+					card.style.display = visible.includes(card) ? "" : "none";
+				});
+
+				if (countEl) countEl.textContent = String(visible.length);
+				if (emptyStateEl) emptyStateEl.hidden = visible.length > 0;
+				if (list) list.style.display = visible.length > 0 ? "" : "none";
+				if (activeFiltersEl) {
+					const chips = [
+						search ? `关键词: ${search}` : "",
+						vendor ? `商家: ${vendor}` : "",
+						region ? `地区: ${region}` : "",
+						tag ? `标签: ${tag}` : "",
+						billing ? `周期: ${billing}` : "",
+						status ? `状态: ${status === "active" ? "进行中" : "已过期"}` : "",
+					].filter(Boolean);
+					activeFiltersEl.innerHTML = chips.length
+						? chips.map((chip) => `<span class="filter-chip">${chip}</span>`).join("")
+						: `<span class="muted">当前显示全部活动</span>`;
+				}
+			}
+
+			applyFilters();
+		</script>
+		<Footer />
+	</body>
+</html>
